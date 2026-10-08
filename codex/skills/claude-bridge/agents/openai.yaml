@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claude bridge"
+  short_description: "Talk with the local Claude Code sessions"
+  default_prompt: "Use $claude-bridge to contact an open Claude Code session and read its answer."

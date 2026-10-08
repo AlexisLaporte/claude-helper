@@ -10,6 +10,7 @@ authentication URL of an MCP server opens by itself in the right place.
 """
 import shutil
 import subprocess
+from urllib.parse import urlsplit
 
 from . import config, profiles
 from .term import die, grey
@@ -43,10 +44,20 @@ def listing():
         print("no window yet")
 
 
+def checked(urls):
+    """Only web URLs reach the browser: as $BROWSER, it receives whatever a session asks
+    to open, and an argument such as `--renderer-cmd-prefix=…` would be a Chrome switch."""
+    for url in urls:
+        if urlsplit(url).scheme not in ("http", "https"):
+            die(f"not an http(s) URL, refused: {url}")
+    return urls
+
+
 def open_urls(urls, name=None, dry_run=False):
     name = name or profiles.of_this_process()
+    # `--` ends Chrome's switches: what follows is only ever a URL.
     command = [binary(), f"--user-data-dir={windows_dir() / window_of(name)}",
-               "--no-first-run", "--no-default-browser-check", *(urls or [DEFAULT_URL])]
+               "--no-first-run", "--no-default-browser-check", "--", *checked(urls or [DEFAULT_URL])]
     grey(f"→ {name} · {command[1].split('=', 1)[1]}")
     if dry_run:
         print(" ".join(command))

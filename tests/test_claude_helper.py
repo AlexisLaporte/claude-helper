@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from claude_helper import config, launch, md, profiles, sessions  # noqa: E402
+from claude_helper import browser, config, launch, md, profiles, sessions  # noqa: E402
 
 
 class Home(unittest.TestCase):
@@ -222,6 +222,14 @@ class Md(Home):
         (self.home / "outside").mkdir()
         (self.home / "outside" / "CLAUDE.md").write_text("y")
         self.assertEqual(md.all_files(), [(self.home / "w" / "a" / "CLAUDE.md").resolve()])
+
+
+class Browser(Home):
+    def test_only_web_urls(self):
+        self.assertEqual(browser.checked(["https://claude.ai/x"]), ["https://claude.ai/x"])
+        for bad in ("--renderer-cmd-prefix=/bin/sh", "file:///etc/passwd", "javascript:alert(1)"):
+            with self.assertRaises(SystemExit), mock.patch("sys.stderr", io.StringIO()):
+                browser.checked([bad])
 
 
 if __name__ == "__main__":

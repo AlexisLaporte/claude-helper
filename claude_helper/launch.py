@@ -136,7 +136,7 @@ def live_sessions():
 def launched_by(pid):
     if alive(env_of(pid, LAUNCHER_VAR)):
         return "launcher"
-    if env_of(pid, "KITTY_WINDOW_ID"):
+    if kitty_window(pid):
         return "kitty"
     return "manual"
 
@@ -199,6 +199,16 @@ def kitty_foreground(listen_on, window_id):
     return None
 
 
+def kitty_window(pid):
+    """(listen_on, window_id) of the kitty window the session runs in, if that window still
+    answers. The variables alone are not enough: a process started from a kitty that has
+    since closed (Claude Desktop launched from a terminal) inherits them all the same."""
+    listen_on, window_id = env_of(pid, "KITTY_LISTEN_ON"), env_of(pid, "KITTY_WINDOW_ID")
+    if listen_on and window_id and shutil.which("kitty") and kitty_foreground(listen_on, window_id):
+        return listen_on, window_id
+    return None
+
+
 SHELLS = ("bash", "zsh", "fish", "sh", "-bash", "-zsh")
 
 
@@ -218,12 +228,13 @@ def relaunch(session, target):
     # Absolute path: the shell of the window may predate the PATH that has claude-helper.
     command = f"cd {shlex.quote(cwd)} && {shlex.quote(str(config.ENTRY))} profile run {target} --resume {sid}"
     launcher = env_of(pid, LAUNCHER_VAR)
-    listen_on, window_id = env_of(pid, "KITTY_LISTEN_ON"), env_of(pid, "KITTY_WINDOW_ID")
+    window = kitty_window(pid)
     if alive(launcher):
         (relaunch_dir() / launcher).write_text(f"{target}\n{sid}\n")
         stop(pid)
         log(f"  {pid} relaunched by its launcher ({sid})")
-    elif listen_on and window_id and shutil.which("kitty") and kitty_foreground(listen_on, window_id):
+    elif window:
+        listen_on, window_id = window
         stop(pid)
         if back_to_shell(listen_on, window_id):
             subprocess.run(["kitty", "@", "--to", listen_on, "send-text", "--match", f"id:{window_id}",

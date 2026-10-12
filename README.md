@@ -11,7 +11,7 @@ claude-helper md …             browse CLAUDE.md files, see what a directory lo
 claude-helper browser …        one browser window per account
 ```
 
-`ch` is a short alias of `claude-helper`. Python 3.11+, standard library only, Linux.
+`ch` is a short alias of `claude-helper`, `man claude-helper` the full reference. Python 3.11+, standard library only, Linux.
 
 ## Install
 
@@ -120,7 +120,11 @@ python3 -m unittest discover -s tests
 (cd codex/skills/claude-bridge/scripts && python3 -m unittest discover -p 'test_*.py')
 ```
 
-Tests run in a throwaway `$HOME`.
+Tests run in a throwaway `$HOME`. The man page is rendered from the argument parser; a test fails until it is rendered again after a change to the commands:
+
+```bash
+python3 -m claude_helper.manpage > man/man1/claude-helper.1
+```
 
 ## License
 

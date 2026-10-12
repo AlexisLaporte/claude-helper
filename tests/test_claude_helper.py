@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from claude_helper import browser, config, launch, md, profiles, sessions  # noqa: E402
+from claude_helper import browser, config, launch, manpage, md, profiles, sessions  # noqa: E402
 
 
 class Home(unittest.TestCase):
@@ -234,3 +234,10 @@ class Browser(Home):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ManPage(unittest.TestCase):
+    def test_committed_page_matches_the_parser(self):
+        page = Path(__file__).resolve().parent.parent / "man" / "man1" / manpage.PAGE
+        self.assertEqual(page.read_text(), manpage.render(),
+                         "run: python3 -m claude_helper.manpage > man/man1/claude-helper.1")

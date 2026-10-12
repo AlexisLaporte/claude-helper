@@ -1,0 +1,162 @@
+.TH CLAUDE\-HELPER 1 "" "claude-helper" "User Commands"
+.SH NAME
+claude\-helper, ch \- Several Claude Code accounts, one configuration, and the tools around it
+.SH SYNOPSIS
+\fBclaude\-helper\fR \fIcommand\fR [\fIargs\fR...]
+.br
+\fBclaude\fR [\fIclaude arguments\fR...]
+.SH DESCRIPTION
+Several Claude Code accounts on one Linux machine, with one configuration and one session
+database, plus the small tools that make living with many sessions bearable.
+.PP
+The same entry point answers under several names:
+.TP
+.B claude
+Claude Code on the current profile. bin/ must come last in PATH, so this wrapper wins over
+the binary of the official installer.
+.TP
+.B claude\-browser
+the $BROWSER of the sessions: opens a URL in the browser window of the account.
+.TP
+.BR claude\-helper ", " ch
+everything else, described below.
+.SH COMMANDS
+.SS profile
+accounts: list, use, switch, init…
+.PP
+\fBclaude\-helper profile list [\-\-offline]\fR
+.RS
+profiles, account, organization, quota (5 h / 7 days); * = current
+.TP
+\fB\-\-offline\fR
+do not call the API for the quota
+.RE
+.PP
+\fBclaude\-helper profile current\fR
+.RS
+print the current profile
+.RE
+.PP
+\fBclaude\-helper profile use name\fR
+.RS
+set the current profile: the one `claude` launches
+.RE
+.PP
+\fBclaude\-helper profile switch [\-\-force] name\fR
+.RS
+use + relaunch every open session on that profile (\-\-resume)
+.TP
+\fB\-\-force\fR
+do not wait for a session to be idle
+.RE
+.PP
+\fBclaude\-helper profile live\fR
+.RS
+open sessions: pid, profile, status, how they can be relaunched
+.RE
+.PP
+\fBclaude\-helper profile init name\fR
+.RS
+create ~/.claude\-<name> and link it to the main profile
+.RE
+.PP
+\fBclaude\-helper profile sync [name]\fR
+.RS
+lay the links again, reconcile the MCP servers
+.TP
+\fIname\fR
+default: every profile
+.RE
+.PP
+\fBclaude\-helper profile run <name> [claude arguments…]\fR
+.RS
+sync, launch Claude on <name> with the remaining arguments, sync again
+.RE
+.PP
+\fBclaude\-helper profile doctor [name]\fR
+.RS
+check the setup without changing anything
+.RE
+.SS sessions
+find past conversations: latest, by word typed, by name
+.PP
+\fBclaude\-helper sessions [\-\-name WORD] [\-\-here] [\-n N] [word]\fR
+.TP
+\fIword\fR
+a word you typed in the conversation
+.TP
+\fB\-\-name\fR \fIWORD\fR
+match the session name (/rename) or its project folder
+.TP
+\fB\-\-here\fR
+only the project of the current directory
+.TP
+\fB\-n\fR \fIN\fR
+how many (default 15)
+.SS recall
+wake a session up, even closed: it answers, then exits
+.PP
+\fBclaude\-helper recall [\-\-write] target question\fR
+.TP
+\fItarget\fR
+session name (/rename) or id
+.TP
+\fB\-\-write\fR
+move the real conversation forward instead of a fork
+.SS md
+browse the CLAUDE.md files, or show what a directory loads
+.PP
+\fBclaude\-helper md [\-\-junk] [directory]\fR
+.TP
+\fIdirectory\fR
+show the cascade a session opened there loads
+.TP
+\fB\-\-junk\fR
+frozen copies and broken links
+.SS browser
+open URLs in the browser window of a profile's account
+.PP
+\fBclaude\-helper browser [\-\-profile PROFILE] [\-\-list] [\-\-dry\-run] [urls ...]\fR
+.TP
+\fB\-\-profile\fR, \fB\-p\fR \fIPROFILE\fR
+default: the profile of this process, else the current one
+.TP
+\fB\-\-list\fR
+windows already created
+.TP
+\fB\-\-dry\-run\fR, \fB\-n\fR
+print the command, open nothing
+.SH PROFILES
+A profile is a CLAUDE_CONFIG_DIR. The main profile is ~/.claude itself; every other profile
+is ~/.claude\-<name>, with its own login, token and account, and everything else (CLAUDE.md,
+settings, skills, plugins, projects/ with the transcripts and memory) a symlink to the main
+profile.
+.PP
+A /login inside a session does not move the claude.ai MCP servers to the new account: they
+stay bound to the account the process started with. That is why
+.B profile switch
+stops every open session once idle and resumes it with \-\-resume on the new profile.
+.SH FILES
+.TP
+.I ~/.config/claude\-helper/config.toml
+settings, every key optional: main_profile, claude_bin, md_roots, browser.
+.TP
+.I ~/.local/state/claude\-helper/
+current profile, relaunch markers, switch.log (resume commands of the sessions that could
+not be relaunched).
+.TP
+.I ~/.local/share/claude\-helper/browser/
+one browser profile per account.
+.TP
+.I <config>/sessions/<pid>.json
+Claude Code's own registry of open sessions, read by switch and live.
+.SH ENVIRONMENT
+.TP
+.B CLAUDE_PROFILE
+the profile of this process; a session never changes account under its own feet.
+.TP
+.B CLAUDE_CONFIG_DIR
+Claude Code's configuration directory, set by the wrapper from the profile.
+.SH SEE ALSO
+\fBclaude\-helper\fR \fIcommand\fR \fB\-\-help\fR,
+the README: https://github.com/AlexisLaporte/claude\-helper
